@@ -59,7 +59,7 @@ func (t *VoteChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 
 		return t.getUserVote(stub,args)
 
-	}else if fn == "getUserVoteById" {
+	} else if fn == "getUserVoteById" {
 
 		return t.getUserVoteById(stub,args)
 
@@ -162,7 +162,7 @@ func (t *VoteChaincode) getUserVoteById(stub shim.ChaincodeStubInterface , args 
 
 
 
-	fmt.Printf("result£º\n%d\n",vote.Votenum)
+	fmt.Printf("result: %d",vote.Votenum)
 
 	return shim.Success(nil)
 
@@ -226,7 +226,7 @@ func (t *VoteChaincode) getUserVote(stub shim.ChaincodeStubInterface, args []str
 
  
 
-	fmt.Printf("result£º\n%s\n",buffer.String())
+	fmt.Printf("result: \n%s\n",buffer.String())
 
 
 	return shim.Success(buffer.Bytes())
