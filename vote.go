@@ -1,10 +1,8 @@
-
 package main
 
  
 
 import(
-
 	"fmt"
 
 	"encoding/json"
@@ -14,7 +12,6 @@ import(
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 
 	"github.com/hyperledger/fabric/protos/peer"
-
 )
 
  
@@ -28,15 +25,12 @@ type VoteChaincode struct {
 type Vote struct {
 
 	Username string `json:"username"`
-
 	Votenum int `json:"votenum"`
-
 }
 
  
 
 func (t *VoteChaincode) Init(stub shim.ChaincodeStubInterface) peer.Response {
-
 	return shim.Success(nil)
 
 }
@@ -44,89 +38,51 @@ func (t *VoteChaincode) Init(stub shim.ChaincodeStubInterface) peer.Response {
  
 
 func (t *VoteChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
-
- 
-
 	fn , args := stub.GetFunctionAndParameters()
-
- 
-
 	if fn == "voteUser" {
-
 		return t.voteUser(stub,args)
-
 	} else if fn == "getUserVote" {
-
 		return t.getUserVote(stub,args)
-
 	} else if fn == "getUserVoteById" {
-
 		return t.getUserVoteById(stub,args)
-
+	} else if fn == "initLedger" {
+		return t.initLedger(stub,args)
 	}
 
- 
-
-	return shim.Error("error Invoke£¡")
+	return shim.Error("error InvokeÂ£Â¡")
 
 }
 
  
 
 func (t *VoteChaincode) voteUser(stub shim.ChaincodeStubInterface , args []string) peer.Response{
-
 	vote := Vote{}
-
 	username := args[0]
-
 	voteAsBytes, err := stub.GetState(username)
-
  
-
 	if err != nil {
-
 		shim.Error("voteUser failed!")
-
 	}
-
- 
 
 	if voteAsBytes != nil {
-
 		err = json.Unmarshal(voteAsBytes, &vote)
-
 		if err != nil {
-
 			shim.Error(err.Error())
-
 		}
-
 		vote.Votenum += 1
-
 	}else {
-
 		vote = Vote{ Username: args[0], Votenum: 1} 
-
 	}
-
- 
 
 	voteJsonAsBytes, err := json.Marshal(vote)
-
 	if err != nil {
-
 		shim.Error(err.Error())
-
 	}
-
- 
 
 	err = stub.PutState(username,voteJsonAsBytes)
 
 	if err != nil {
-
-		shim.Error("write vote  failed")
-
+		shim.Error("write vote failed")
 	}
 
 
@@ -134,103 +90,76 @@ func (t *VoteChaincode) voteUser(stub shim.ChaincodeStubInterface , args []strin
 
 }
 
-
-func (t *VoteChaincode) getUserVoteById(stub shim.ChaincodeStubInterface , args []string) peer.Response{
-
-	vote := Vote{}
-
-	username := args[0]
-
-	voteAsBytes, err := stub.GetState(username)
-
- 
-
-	if err != nil {
-
-		shim.Error("User does not existed!")
-
+func (t *VoteChaincode) initLedger(stub shim.ChaincodeStubInterface , args []string) peer.Response{
+	
+	votes := []Vote{
+		Vote{Username: "louis", Votenum: 4},
+		Vote{Username: "alexander", Votenum: 1},
+		Vote{Username: "liu", Votenum: 5},
+		Vote{Username: "luo", Votenum: 2},
+		Vote{Username: "li", Votenum: 1},
 	}
 
-
-	err = json.Unmarshal(voteAsBytes, &vote)
-
-	if err != nil {
-
-		shim.Error(err.Error())
-
+	i := 0
+	for i < len(votes){
+		votesJsonAsBytes, _ := json.Marshal(votes[i])
+		stub.PutState(votes[i].Username,votesJsonAsBytes)
+		i = i + 1
 	}
-
-
-
-	fmt.Printf("result: %d",vote.Votenum)
 
 	return shim.Success(nil)
 
+}
+
+func (t *VoteChaincode) getUserVoteById(stub shim.ChaincodeStubInterface , args []string) peer.Response{
+	vote := Vote{}
+	username := args[0]
+	voteAsBytes, err := stub.GetState(username)
+
+	if err != nil {
+		shim.Error("User does not existed!")
+	}
+
+	err = json.Unmarshal(voteAsBytes, &vote)
+	if err != nil {
+		shim.Error(err.Error())
+	}
+
+	fmt.Printf("result:\n%s\n",voteAsBytes)
+	return shim.Success(voteAsBytes)
 }
 
  
 
 func (t *VoteChaincode) getUserVote(stub shim.ChaincodeStubInterface, args []string) peer.Response{
-
 	resultIterator, err := stub.GetStateByRange("","")
-
 	if err != nil {
-
 		return shim.Error("get vote data failed!")
-
 	}
 
 	defer resultIterator.Close()
 
- 
-
 	var buffer bytes.Buffer
-
 	buffer.WriteString("[")
-
- 
-
 	isWritten := false
 
- 
-
 	for resultIterator.HasNext() {
-
 		queryResult , err := resultIterator.Next()
-
 		if err != nil {
-
 			return shim.Error(err.Error())
-
 		}
-
- 
-
 		if isWritten == true {
-
 			buffer.WriteString(",")
-
 		}
-
- 
 
 		buffer.WriteString(string(queryResult.Value))
-
 		isWritten = true
-
 	}
-
- 
 
 	buffer.WriteString("]")
 
- 
-
-	fmt.Printf("result: \n%s\n",buffer.String())
-
-
+	fmt.Printf("result:\n%s\n",buffer.String())
 	return shim.Success(buffer.Bytes())
-
 }
 
  
@@ -240,9 +169,7 @@ func main(){
 	err := shim.Start(new(VoteChaincode))
 
 	if err != nil {
-
 		fmt.Println("vote chaincode start error")
-
 	}
 
 }
