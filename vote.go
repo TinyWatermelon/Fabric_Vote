@@ -53,6 +53,28 @@ func (t *VoteChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 
 }
 
+
+func (t *VoteChaincode) delUser(stub shim.ChaincodeStubInterface , args []string) peer.Response{
+	vote := Vote{}
+	username := args[0]
+	_, err := stub.GetState(username)
+ 
+	if err != nil {
+		shim.Error("user does not exist.")
+	}
+
+	err = stub.DelState(username)
+
+	if err != nil {
+		shim.Error("delete user failed")
+	}
+
+
+	return shim.Success(nil)
+
+}
+
+
  
 
 func (t *VoteChaincode) voteUser(stub shim.ChaincodeStubInterface , args []string) peer.Response{
